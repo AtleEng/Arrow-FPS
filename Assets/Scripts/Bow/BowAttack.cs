@@ -13,6 +13,10 @@ public class BowAttack : MonoBehaviour
     float power;
     bool isCharging;
 
+    [Header("Ammo")]
+    [SerializeField] int currentAmmo;
+    [SerializeField] int maxAmmo;
+
     [Header("Projectile")]
     [SerializeField] GameObject prefab;
 
@@ -36,7 +40,7 @@ public class BowAttack : MonoBehaviour
             currentChargeTime = 0;
         }
 
-        if (isCharging)
+        if (isCharging && currentAmmo > 0)
         {
             currentChargeTime += Time.deltaTime;
             power = chargeGraph.Evaluate(currentChargeTime);
@@ -47,6 +51,8 @@ public class BowAttack : MonoBehaviour
                 power = 0;
                 currentChargeTime = 0;
                 isCharging = false;
+
+                currentAmmo--;
             }
             anim.SetFloat("nTime", power / 2);
             slider.value = currentChargeTime / chargeTime;
