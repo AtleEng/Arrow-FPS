@@ -9,26 +9,42 @@ public class CameraMovement : MonoBehaviour
     [SerializeField] GameObject oriention;
     float pitch;
     float yaw;
+    [SerializeField] GameObject cursor;
 
     [Header("Stats")]
     [SerializeField] float sensitivity;
 
+    [Header("State")]
+    public bool uiMode;
+
     // Update is called once per frame
     void Update()
     {
-        Vector2 mouseDelta = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+        if (uiMode)
+        {
+            cursor.SetActive(true);
 
-        pitch -= mouseDelta.y * sensitivity;
-        pitch = Mathf.Clamp(pitch, -80, 80);
+            Cursor.lockState = CursorLockMode.None;
+            cursor.transform.position = Input.mousePosition;
+        }
+        else
+        {
+            cursor.SetActive(false);
 
-        yaw += mouseDelta.x * sensitivity;
+            Vector2 mouseDelta = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
 
-        camHolder.transform.localEulerAngles = Vector3.right * pitch;
+            pitch -= mouseDelta.y * sensitivity;
+            pitch = Mathf.Clamp(pitch, -80, 80);
 
-        oriention.transform.localEulerAngles = Vector3.up * yaw;
+            yaw += mouseDelta.x * sensitivity;
 
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Confined;
+            camHolder.transform.localEulerAngles = Vector3.right * pitch;
+
+            oriention.transform.localEulerAngles = Vector3.up * yaw;
+
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
     }
     private void OnDrawGizmos()
     {

@@ -12,57 +12,82 @@ public class BowAttack : MonoBehaviour
     [SerializeField] AnimationCurve chargeGraph;
     float power;
     bool isCharging;
-
-    [Header("Ammo")]
-    [SerializeField] int currentAmmo;
-    [SerializeField] int maxAmmo;
+    [SerializeField] float minCharging;
 
     [Header("Projectile")]
     [SerializeField] GameObject prefab;
+    GameObject currentArrow;
+    [SerializeField] Transform drawPoint;
 
     [Header("Component")]
     [SerializeField] Animator anim;
-    [SerializeField] Slider slider;
 
     [SerializeField] Queue<Arrow> arrows = new();
     [SerializeField] int maxArrowsInScene;
 
     [SerializeField] Collider collider;
+    [SerializeField] AmmoManager ammoManager;
+
+    [Header("UI")]
+    [SerializeField] Slider slider;
+    [Space(15)]
+    [SerializeField] RectTransform crossHair;
+    [SerializeField] Vector3 minSize, maxSize;
     void Update()
     {
         ChargeBow();
     }
     void ChargeBow()
     {
-        if (Input.GetButtonDown("Fire1"))
+        if (Input.GetButtonDown("Fire1") && ammoManager.CurrentAmmo > 0)
         {
             isCharging = true;
             currentChargeTime = 0;
+
+            currentArrow = Instantiate(prefab, transform.position, transform.rotation, drawPoint);
         }
 
-        if (isCharging && currentAmmo > 0)
+        if (isCharging)
         {
             currentChargeTime += Time.deltaTime;
             power = chargeGraph.Evaluate(currentChargeTime);
 
+            currentArrow.transform.position = drawPoint.position;
+            currentArrow.transform.rotation = drawPoint.rotation;
+
             if (Input.GetButtonUp("Fire1"))
             {
-                FireBow();
-                power = 0;
-                currentChargeTime = 0;
-                isCharging = false;
+                if (power >= minCharging)
+                {
+                    FireBow();
+                    power = 0;
+                    currentChargeTime = 0;
+                    isCharging = false;
 
-                currentAmmo--;
+                    ammoManager.CurrentAmmo--;
+                }
+                else
+                {
+                    power = 0;
+                    currentChargeTime = 0;
+                    isCharging = false;
+                    Destroy(currentArrow);
+                }
             }
             anim.SetFloat("nTime", power / 2);
             slider.value = currentChargeTime / chargeTime;
+
+            crossHair.sizeDelta = Vector3.Lerp(minSize, maxSize, currentChargeTime);
+        }
+        else
+        {
+            isCharging = false;
         }
     }
 
     void FireBow()
     {
-        GameObject arrowObj = Instantiate(prefab, transform.position, transform.rotation);
-        Arrow arrow = arrowObj.GetComponent<Arrow>();
+        Arrow arrow = currentArrow.GetComponent<Arrow>();
 
         arrows.Enqueue(arrow);
         if (arrows.Count > maxArrowsInScene)
